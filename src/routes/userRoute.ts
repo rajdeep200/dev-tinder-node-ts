@@ -5,6 +5,7 @@ import {
   getUserByEmailController,
   getUserController,
   updateUserByIdController,
+  userLoginController,
 } from "../controllers/userController";
 
 const router = Router();
@@ -23,5 +24,8 @@ router.route("/:id").delete(deleteUserByIdController);
 
 // Update User By ID
 router.route("/:id").patch(updateUserByIdController);
+
+// Login User
+router.route("/login").post(userLoginController)
 
 export default router;

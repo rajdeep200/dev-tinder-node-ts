@@ -10,6 +10,9 @@ export const ERROR_MESSAGES = {
     PASSWORD_REQUIRED: 'Password required',
     GENDER_REQUIRED: 'Gender required',
     PASSWORD_INCORRECT: 'Password lenth should be at least 8. It should contain at least one uppercase, lowercase, number and symbol.',
+    WRONG_PASSWORD: 'Incorrect password',
+    LOGIN_SUCCESS: 'Login successful',
+    UNAUTH: 'Unauthorized',
 }
 
 export const ALLOWED_USER_DOC_UPDATES: string[] = ["firstName", "lastName", "password", "email"]

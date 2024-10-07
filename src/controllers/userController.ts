@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
 import {
   createUser,
   deleteUserById,
@@ -10,6 +10,8 @@ import {
 import { ALLOWED_USER_DOC_UPDATES, ERROR_MESSAGES } from "../utils/constants";
 import { ResponseBody } from "../classes/ErrorResponse";
 import { validateSignUpPayload } from "../utils/validator";
+import { JwtAuth } from "../utils/utils";
+import { request } from "http";
 
 export const createUserController = async (
   req: Request,
@@ -17,13 +19,15 @@ export const createUserController = async (
   next: NextFunction
 ) => {
   try {
-    validateSignUpPayload(req.body)
+    validateSignUpPayload(req.body);
     const hashedPassword: string = await bcrypt.hash(req.body.password, 10);
     req.body.password = hashedPassword;
     const user = await createUser(req.body);
-    res.status(201).json({
+    const userId: string | unknown = user._id;
+    const jwtToken = await new JwtAuth().generateToken(userId);
+    res.status(200).json({
       success: true,
-      data: user,
+      data: {user, token: jwtToken},
     });
   } catch (error) {
     console.error("Error creating user :: ", error);
@@ -102,9 +106,11 @@ export const updateUserByIdController = async (
   try {
     const { id } = req.params;
 
-    const updateAllowed = Object.keys(req.body).every(k => ALLOWED_USER_DOC_UPDATES.includes(k))
+    const updateAllowed = Object.keys(req.body).every((k) =>
+      ALLOWED_USER_DOC_UPDATES.includes(k)
+    );
     if (!updateAllowed) {
-        res.status(400).json(new ResponseBody(false, ERROR_MESSAGES.BAD_REQUEST));
+      res.status(400).json(new ResponseBody(false, ERROR_MESSAGES.BAD_REQUEST));
     }
 
     if (!id) {
@@ -120,6 +126,46 @@ export const updateUserByIdController = async (
       .json(new ResponseBody(true, ERROR_MESSAGES.USER_UPDATED, response));
   } catch (error) {
     console.log("getUserByEmailController Error :: ", error);
+    next(error);
+  }
+};
+
+export const userLoginController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email) {
+      res.status(400).json(new ResponseBody(false, ERROR_MESSAGES.BAD_REQUEST));
+    }
+
+    // Check if user exist
+    const user = await getUserByEmail(email);
+    if (!user) {
+      res.status(404).json(new ResponseBody(false, ERROR_MESSAGES.USER_NOT_FOUND));
+      return;
+    }
+
+    // Check Password Validation
+    const isValidPassword = await bcrypt.compare(password, user?.password ?? '');
+    if (!isValidPassword) {
+      res.status(401).json(new ResponseBody(false, ERROR_MESSAGES.WRONG_PASSWORD));
+      return;
+    }
+    user.password = '';
+
+    const userId: string | unknown = user?._id || '';
+    const jwtToken = await new JwtAuth().generateToken(userId);
+
+    res
+      .status(200)
+      .json(new ResponseBody(true, ERROR_MESSAGES.LOGIN_SUCCESS, {user, token: jwtToken}));
+
+  } catch (error) {
+    console.log("userLoginController Error :: ", error);
     next(error);
   }
 };
