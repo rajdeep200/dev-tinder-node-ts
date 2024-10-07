@@ -16,6 +16,12 @@ export const getUserByEmail = async (
   return await User.findOne({ email });
 };
 
+export const getUserById = async (
+  id: string
+): Promise<IUserDocument | null> => {
+  return await User.findById(id);
+};
+
 export const deleteUserById = async (
   id: string
 ): Promise<IUserDocument | null> => {

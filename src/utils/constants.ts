@@ -13,6 +13,8 @@ export const ERROR_MESSAGES = {
     WRONG_PASSWORD: 'Incorrect password',
     LOGIN_SUCCESS: 'Login successful',
     UNAUTH: 'Unauthorized',
+    INVALID_TOKEN: 'Invalid token',
+    SOMETHING_WENT_WRONG: 'Something went wrong'
 }
 
 export const ALLOWED_USER_DOC_UPDATES: string[] = ["firstName", "lastName", "password", "email"]
